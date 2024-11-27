@@ -1,5 +1,6 @@
 import sympy as sp
 import numpy as np
+import matplotlib.pyplot as plt
 
 def Calc_M(A_f,B_f,C_f,N_m,N_e):
     np_A = np.array(A_f).astype(np.float64)
@@ -54,10 +55,10 @@ R_f = l*sp.Matrix([
 
 ]) 
 # State Variables
-r, theta_r, rdot, theta_rdot = sp.symbols('r theta_r rdot theta_rdot')
+r_st, theta_r, rdot, theta_rdot = sp.symbols('r theta_r rdot theta_rdot')
 x,u,d,n = sp.symbols('x u d n')
 tau_m, tau_b = sp.symbols('tau_m tau_b')
-x = sp.Matrix([[r],[theta_r],[rdot],[theta_rdot]])
+x = sp.Matrix([[r_st],[theta_r],[rdot],[theta_rdot]])
 # sp.pprint(x)
 
 
@@ -195,10 +196,10 @@ Kal_th_e = sp.Matrix([[th1_e],
                       [th1_edot],
                       [th12_edot]])
 a = accel
-F = sp.Matrix([[1,0],
-               [0,1],
-               [1,0],
-               [0,1]])
+# F = sp.Matrix([[1,0],
+#                [0,1],
+#                [1,0],
+#                [0,1]])
 # Kal_th_e_dot = A_f*Kal_th_e + B_f*a + F*(Kal_y - C_f*Kal_th_e)
 # G = (Kal_y - C_f*Kal_th_e)
 
@@ -219,7 +220,7 @@ F = M*C_f.T*N_m.inv()
 
 Kal_th_e_dot = A_f*Kal_th_e + B_f*a + F*(Kal_y - C_f*Kal_th_e)
 
-# sp.pprint(Kal_th_e_dot)
+sp.pprint(Kal_th_e_dot)
 # print(M_soln)
 # Equation 20
 x_est = sp.Matrix([[2*l*sp.cos(0.5*th2_e)],
@@ -299,8 +300,8 @@ Kalman_Thdot = Kal_th_e_dot.subs({I_1:I1_num,I_2:I2_num,l: l_num,l_20:l20_num, m
 
 estimated_x = x_est.subs({th1_e:est_th1,th12_e:est_th12,th2_e:est_th2,l:l_num,th12_edot:est_th12d,th1_edot:est_th1d,th2_edot:est_th2d})
 
-K_f = sp.Matrix([[10,10,10,10],
-                 [5,5,5,5]])
+K_f = sp.Matrix([[1,1,1,1],
+                 [.5,.5,.5,.5]])
 x_des = sp.Matrix([[0],[0],[0],[0]])
 v = K_f*(x_des - estimated_x)
 
@@ -320,13 +321,13 @@ v = K_f*(x_des - estimated_x)
 # theta1 = np.pi/4
 # theta2 = np.pi/4
 # theta12 = np.pi/2
-r = 0.75
+# r = 0.75
 phi = np.pi/8
 rd = 0
 phid = 0
-theta2 = np.arccos((2*l_num**2-r**2)/(2*l_num*l_num))
-theta1 = phi - np.arccos((r**2)/(2*l_num*r))
-theta12 = theta1 + theta2
+# theta2 = np.arccos((2*l_num**2-r**2)/(2*l_num*l_num))
+# theta1 = phi - np.arccos((r**2)/(2*l_num*r))
+# theta12 = theta1 + theta2
 
 theta12d = 0.157
 theta1d = 0.157
@@ -357,6 +358,7 @@ x_d = x_d.subs({I_1:I1_num,
                 theta_rdot:phid,
                 
                 })
+sp.pprint(tau_m)
 
 State_dot = x_d
 rd = State_dot[0]
@@ -376,19 +378,43 @@ u_ctrl = u_ctrl.subs({I_1:I1_num,
                       theta_2dot:theta2d})
 r_num=1
 phi= np.pi/4
-rd = 0
+rd = 0.1
 phid=0
 ax = 0
 ay = 0
-
+phi_rec = []
+r_rec = []
+ref_rec = []
+xhat_rec = []
 x_des = sp.Matrix([[0.34],[0.5],[0.2],[0.4]])
-
+estth1=0
+estth12=0
+estth2=0
+estth12dot=0
+estth1dot=0
+estth2dot=0
 # sp.pprint(x_est)
 for t in np.arange(0,5,0.1):
+    f = 2
+    ref_r = -0.2+0.015*np.sin(2*np.pi*f*t)
+    x_des = sp.Matrix([[ref_r],[0],[0],[0]])
+    # sp.pprint(x_des)
+    ref_rec.append(ref_r)
+    
+    
     theta2 = np.arccos((2*l_num**2-r_num**2)/(2*l_num*l_num))
     theta1 = phi - np.arccos((r_num**2)/(2*l_num*r_num))
     theta12 = theta1 + theta2
-    sp.pprint(x.subs({theta_r:phi,theta_rdot:phid,rdot:rd,r:1}))
+    
+    # sp.pprint(x.subs({r_st:r_num,theta_r:phi,theta_rdot:phid,rdot:rd}))
+    
+    x_cur = x.subs({r_st:r_num,theta_r:phi,theta_rdot:phid,rdot:rd})
+    # # r_num=1
+    # # phi= np.pi/4
+    # rd = x[0]
+    # phid=x[1]
+    # y_r
+    
     
     Acceleration = accel.subs({a_x:ax,a_y:ay})
     Th1Accel = Acceleration[0]
@@ -406,19 +432,19 @@ for t in np.arange(0,5,0.1):
                                     theta_2dot: theta2d, 
                                     theta_1:theta1,
                                     theta_12: theta12,
-                                    th1_e:est_th1,
-                                    th12_e:est_th12,
-                                    th1_edot:est_th1d,
-                                    th12_edot:est_th12d,
+                                    th1_e:estth1,
+                                    th12_e:estth12,
+                                    th1_edot:estth1dot,
+                                    th12_edot:estth12dot,
                                     a_x:ax,
                                     a_y:ay})
-    sp.pprint(Est_Kal)
+    # sp.pprint(Est_Kal)
     KalmanY = Kal_y.subs({
                             theta_12dot:theta12d,
                             theta_1dot:theta1d,
                             theta_1:theta1,
                             theta_12: theta12,})
-    sp.pprint(Kalman_y)
+    # sp.pprint(Kalman_y)
     estth1=Kalman_y[0]
     estth12=Kalman_y[1]
     estth2=estth12-estth1
@@ -427,19 +453,53 @@ for t in np.arange(0,5,0.1):
     estth2dot=estth12dot-estth1dot
     
     xhat= x_est.subs({th1_e:estth1,th12_e:estth12,th2_e:estth2,l:l_num,th12_edot:estth12dot,th1_edot:estth1dot,th2_edot:estth2dot})
-    sp.pprint(xhat)
-    v = K_f*(x_des - xhat)
-    sp.pprint(v)
-    # new_x = 
+    # sp.pprint(xhat)
+    xhat_rec.append(xhat[0])
+    v_eval = K_f*(x_des - xhat)
+    
+    #  V Vectpr Created
+    # sp.pprint(v)
+    new_xdot = x_r.subs({rdot:rd,theta_rdot: phid,v_1 :v_eval[0],v_2 :v_eval[1]}) 
+    # sp.pprint(new_xdot)
+    new_x = x_cur + new_xdot*0.1
+    # sp.pprint(new_x)
+    
+    r_num = float(new_x[0])
+    # print(5)
+    # sp.pprint(type(r_num))
+    phi = float(new_x[1])
+    rd = float(new_x[2])
+    phid = float(new_x[3])
     
     
+    
+    # sp.pprint(x_r)
+    # sp.pprint(y_r)
+    
+    # tau_m = tau_m.subs({v_1 :v_eval[0],v_2 :v_eval[1]})
+    # sp.pprint(tau_m)
+    # tau_b = tau_b.subs({v_1 :v_eval[0],v_2 :v_eval[1]})
+    # sp.pprint(tau_b)
+    sp.pprint(f"t: {t}, r_num: {r_num}, phi: {phi}, rd: {rd}, phid: {phid}")
+    sp.pprint(f"estth1: {estth1}, estth12: {estth12}, estth2: {estth2}")
+    sp.pprint(f"xhat: {xhat}, v_eval: {v_eval}")
     
     
     # Find v
+    phi_rec.append(phi)
+    r_rec.append(r_num)
     
+    # sp.pprint(xhat)
+    if t> 0.5:
+        break
     
+# plt.plot(r_rec)
+# plt.plot(ref_rec)
+# plt.plot(xhat_rec)
+# plt.show()
     
-    break
-    
-    
+plt.plot(ref_rec, label="Reference")
+plt.plot(xhat_rec, label="Estimate")
+plt.legend()
+plt.show()
     
