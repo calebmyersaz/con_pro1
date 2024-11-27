@@ -363,7 +363,7 @@ rd = State_dot[0]
 phid = State_dot[1]
 rdd = State_dot[2]
 phidd = State_dot[3]
-sp.pprint(x_d)
+# sp.pprint(x_d)
 
 u_ctrl = u_ctrl.subs({I_1:I1_num,
                       I_2:I2_num,
@@ -374,28 +374,63 @@ u_ctrl = u_ctrl.subs({I_1:I1_num,
                       theta_12dot:theta12d,
                       theta_1dot:theta1d,
                       theta_2dot:theta2d})
-r=1
+r_num=1
 phi= np.pi/4
 rd = 0
 phid=0
 ax = 0
 ay = 0
 
+x_des = sp.Matrix([[0.34],[0.5],[0.2],[0.4]])
 
-sp.pprint(Kal_thdot)
+# sp.pprint(x_est)
 for t in np.arange(0,5,0.1):
-    theta2 = np.arccos((2*l_num**2-r**2)/(2*l_num*l_num))
-    theta1 = phi - np.arccos((r**2)/(2*l_num*r))
+    theta2 = np.arccos((2*l_num**2-r_num**2)/(2*l_num*l_num))
+    theta1 = phi - np.arccos((r_num**2)/(2*l_num*r_num))
     theta12 = theta1 + theta2
+    sp.pprint(x.subs({theta_r:phi,theta_rdot:phid,rdot:rd,r:1}))
     
     Acceleration = accel.subs({a_x:ax,a_y:ay})
     Th1Accel = Acceleration[0]
     Th12Accel = Acceleration[1]
     
+    Est_Kal = Kal_th_e_dot.subs({I_1:I1_num,
+                                 I_2:I2_num,
+                                 l: l_num,
+                                 l_20:l20_num, 
+                                 m_1:m1_num,
+                                 m_2:m2_num,
+                                 theta_2: theta2,
+                                 theta_12dot:theta12d,
+                                 theta_1dot:theta1d,
+                                    theta_2dot: theta2d, 
+                                    theta_1:theta1,
+                                    theta_12: theta12,
+                                    th1_e:est_th1,
+                                    th12_e:est_th12,
+                                    th1_edot:est_th1d,
+                                    th12_edot:est_th12d,
+                                    a_x:ax,
+                                    a_y:ay})
+    sp.pprint(Est_Kal)
+    KalmanY = Kal_y.subs({
+                            theta_12dot:theta12d,
+                            theta_1dot:theta1d,
+                            theta_1:theta1,
+                            theta_12: theta12,})
+    sp.pprint(Kalman_y)
+    estth1=Kalman_y[0]
+    estth12=Kalman_y[1]
+    estth2=estth12-estth1
+    estth12dot=Est_Kal[2]
+    estth1dot=Est_Kal[3]
+    estth2dot=estth12dot-estth1dot
     
-    
-    
-    estimated_x = x_est
+    xhat= x_est.subs({th1_e:estth1,th12_e:estth12,th2_e:estth2,l:l_num,th12_edot:estth12dot,th1_edot:estth1dot,th2_edot:estth2dot})
+    sp.pprint(xhat)
+    v = K_f*(x_des - xhat)
+    sp.pprint(v)
+    # new_x = 
     
     
     
@@ -404,7 +439,7 @@ for t in np.arange(0,5,0.1):
     
     
     
-    pass
+    break
     
     
     
