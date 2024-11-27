@@ -59,6 +59,11 @@ x,u,d,n = sp.symbols('x u d n')
 tau_m, tau_b = sp.symbols('tau_m tau_b')
 x = sp.Matrix([[r],[theta_r],[rdot],[theta_rdot]])
 # sp.pprint(x)
+
+
+
+
+
 u = sp.Matrix([[tau_m],[tau_b]])
 
 # Equation 7
@@ -79,9 +84,27 @@ A = sp.Matrix([[0,0,1,0],
                [0,0,0,0],
                [0,0,0,0]])
 
+# Rquation 5
+x_d = A*x + B*(u+w) + d
+# print(555)
+# sp.pprint(x_d)
+
+
+
 v,v_1,v_2 = sp.symbols('v v_1 v_2')
 v = sp.Matrix([[v_1],[v_2]])
-
+A_r = sp.Matrix([[0,0,1,0],
+                [0,0,0,1],
+                [0,0,0,0],
+                [0,0,0,0]])
+B_r = sp.Matrix([[0, 0],
+               [0, 0],
+               [0,1],
+               [1, 0]])
+C_r = sp.Matrix([[0,1,0,0],
+                [1,0,0,0]])
+x_r = A_r*x+B_r*v
+y_r = C_r*x
 
 
 # Equation 9
@@ -128,7 +151,7 @@ n_e = -K1.inv()*n
 
 
 
-print('n_e def')
+# print('n_e def')
 # sp.pprint(n_e)
 
 A_f = sp.Matrix([[0,0,1,0],
@@ -236,22 +259,23 @@ theta2d = 0.157
 # sp.pprint(J)
 J = J.subs({I_1:I1_num,I_2:I2_num,l: l_num, m_1:m1_num,m_2:m2_num,theta_2: theta2,theta_12dot:theta12d,theta_1dot:theta1d})
 w = w.subs({I_1:I1_num,I_2:I2_num,l: l_num, m_1:m1_num,m_2:m2_num,theta_2: theta2,theta_12dot:theta12d,theta_1dot:theta1d})
-B = B.subs({I_1:I1_num,I_2:I2_num,l: l_num, m_1:m1_num,m_2:m2_num,theta_2: theta2,theta_12dot:theta12d,theta_1dot:theta1d})
 
-sp.pprint(J)
-sp.pprint(w)
-sp.pprint(B)
-sp.pprint(x)
-
+# sp.pprint(J)
+# sp.pprint(w)
+# sp.pprint(B)
+# sp.pprint(x)
+x_d = x_d.subs({I_1:I1_num,I_2:I2_num,l: l_num, m_1:m1_num,m_2:m2_num,theta_2: theta2,theta_12dot:theta12d,theta_1dot:theta1d,theta_2dot: theta2d})
+# print(666)
+# sp.pprint(x_d)
 # eq 10, still need v inputs
 u_ctrl = u_ctrl.subs({I_1:I1_num,I_2:I2_num,l: l_num, m_1:m1_num,m_2:m2_num,theta_2: theta2,theta_12dot:theta12d,theta_1dot:theta1d,theta_2dot: theta2d})
-sp.pprint(u_ctrl)
+# sp.pprint(u_ctrl)
 
 tau_m = u_ctrl[0]
 tau_b = u_ctrl[1]
 
 d = d.subs({I_1:I1_num,I_2:I2_num,l: l_num, m_1:m1_num,m_2:m2_num,theta_2: theta2,theta_12dot:theta12d,theta_1dot:theta1d,theta_2dot: theta2d})
-sp.pprint(d)
+# sp.pprint(d)
 
 # eq 14 Still needs linear acceleration vals
 accel = accel.subs({I_1:I1_num,I_2:I2_num,l: l_num,l_20:l20_num, m_1:m1_num,m_2:m2_num,theta_2: theta2,theta_12dot:theta12d,theta_1dot:theta1d,theta_2dot: theta2d})
@@ -277,7 +301,110 @@ estimated_x = x_est.subs({th1_e:est_th1,th12_e:est_th12,th2_e:est_th2,l:l_num,th
 
 K_f = sp.Matrix([[10,10,10,10],
                  [5,5,5,5]])
-x_d = sp.Matrix([[0],[0],[0],[0]])
-v = K_f*(x_d - estimated_x)
+x_des = sp.Matrix([[0],[0],[0],[0]])
+v = K_f*(x_des - estimated_x)
 
 # sp.pprint(Kalman_Thdot)
+
+
+
+
+
+
+
+
+
+# *****************************************************
+# Initial COnditions:
+# Initial Thetas
+# theta1 = np.pi/4
+# theta2 = np.pi/4
+# theta12 = np.pi/2
+r = 0.75
+phi = np.pi/8
+rd = 0
+phid = 0
+theta2 = np.arccos((2*l_num**2-r**2)/(2*l_num*l_num))
+theta1 = phi - np.arccos((r**2)/(2*l_num*r))
+theta12 = theta1 + theta2
+
+theta12d = 0.157
+theta1d = 0.157
+theta2d = 0.157
+
+taum = 0.1
+taub = 0.1
+
+# B = B.subs({I_1:I1_num,
+#             I_2:I2_num,
+#             l: l_num, 
+#             m_1:m1_num,
+#             m_2:m2_num,
+#             theta_2:theta2,
+#             theta_12dot:theta12d,
+#             theta_1dot:theta1d})
+# u=u.subs({tau_m:5})
+x_d = x_d.subs({I_1:I1_num,
+                I_2:I2_num,
+                l: l_num, 
+                m_1:m1_num,
+                m_2:m2_num,
+                theta_2: theta2,
+                theta_12dot:theta12d,
+                theta_1dot:theta1d,
+                theta_2dot: theta2d,
+                rdot:rd,
+                theta_rdot:phid,
+                
+                })
+
+State_dot = x_d
+rd = State_dot[0]
+phid = State_dot[1]
+rdd = State_dot[2]
+phidd = State_dot[3]
+sp.pprint(x_d)
+
+u_ctrl = u_ctrl.subs({I_1:I1_num,
+                      I_2:I2_num,
+                      l:l_num, 
+                      m_1:m1_num,
+                      m_2:m2_num,
+                      theta_2:theta2,
+                      theta_12dot:theta12d,
+                      theta_1dot:theta1d,
+                      theta_2dot:theta2d})
+r=1
+phi= np.pi/4
+rd = 0
+phid=0
+ax = 0
+ay = 0
+
+
+sp.pprint(Kal_thdot)
+for t in np.arange(0,5,0.1):
+    theta2 = np.arccos((2*l_num**2-r**2)/(2*l_num*l_num))
+    theta1 = phi - np.arccos((r**2)/(2*l_num*r))
+    theta12 = theta1 + theta2
+    
+    Acceleration = accel.subs({a_x:ax,a_y:ay})
+    Th1Accel = Acceleration[0]
+    Th12Accel = Acceleration[1]
+    
+    
+    
+    
+    estimated_x = x_est
+    
+    
+    
+    
+    # Find v
+    
+    
+    
+    pass
+    
+    
+    
