@@ -35,7 +35,7 @@ def calc_lqr_gain(A, B, Q, R):
 
 # Reference trajectory
 def ref_trajectory(t):
-    return np.array([1 + 0.015 * np.sin(2 * np.pi * 0.5 * t), 0, 0, 0])
+    return np.array([0.2, 0.1*np.sin(2*np.pi*1.5*t), 0, 0])
 
 # Control law
 def control_law(t, x):
@@ -51,14 +51,14 @@ def dynamics(t, x):
 # Simulation parameters
 theta2 = np.pi / 4
 A, B, d = state_matrices(theta2)
-Q = np.diag([500, 500, 10, 10])
-R = np.diag([0.1, 0.1])
+Q = np.diag([100000, 100000, 10, 10])
+R = np.diag([0.01, 0.01])
 K_f = calc_lqr_gain(A, B, Q, R)
 
 # Initial conditions
-x0 = np.array([1.0, 0.0, 0.0, 0.0])
-t_span = [0, 10]
-t_eval = np.linspace(t_span[0], t_span[1], 500)
+x0 = np.array([0.2, 0.0, 0.1, 0.0])
+t_span = [0, 5]
+t_eval = np.linspace(t_span[0], t_span[1], 2000)
 
 # Solve dynamics
 sol = solve_ivp(dynamics, t_span, x0, t_eval=t_eval)
@@ -68,25 +68,28 @@ time = sol.t
 states = sol.y
 reference = np.array([ref_trajectory(t) for t in time])
 
-plt.figure(figsize=(10, 6))
-plt.plot(time, states[0, :], label="r (actual)")
-plt.plot(time, reference[:, 0], '--', label="r (reference)")
-# plt.axes(())
-plt.ylim(0.8, 1.2)
-plt.xlabel("Time (s)")
-plt.ylabel("Position (r)")
-plt.legend()
-plt.grid()
-plt.title("Position Tracking")
-plt.show()
+fig, axs = plt.subplots(2, 1, figsize=(8, 6))  # 2 rows, 1 column
 
-plt.figure(figsize=(10, 6))
-plt.plot(time, states[1, :], label="theta_r (actual)")
-plt.plot(time, reference[:, 1], '--', label="theta_r (reference)")
-plt.xlabel("Time (s)")
-plt.ylim(-1.57, 1.57)
-plt.ylabel("Angle (theta_r)")
-plt.legend()
-plt.grid()
-plt.title("Angle Tracking")
+# Plot data on the first subplot (top)
+axs[0].plot(time, states[0, :], label="r (actual)")
+axs[0].plot(time, reference[:, 0], '--', label="r (reference)")
+axs[0].set_title("Position Tracking")
+axs[0].set_xlabel("Time (s)")
+axs[0].set_ylabel("Position (r)")
+axs[0].set_ylim(0.16,0.24)
+axs[0].legend()
+
+# Plot data on the second subplot (bottom)
+axs[1].plot(time, states[1, :], label="r (actual)")
+axs[1].plot(time, reference[:, 1], '--', label="r (reference)")
+axs[1].set_title("Angle Tracking")
+axs[1].set_xlabel("Time (s)")
+axs[1].set_ylabel("Angle (theta_r)")
+axs[1].set_ylim(-0.12,0.12)
+axs[1].legend()
+
+# Adjust spacing between subplots
+plt.tight_layout()
+
+# Show the plot
 plt.show()
